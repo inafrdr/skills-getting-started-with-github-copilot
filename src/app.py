@@ -81,6 +81,9 @@ activities.update({
     }
 })
 
+# Expose activities for testing
+app.activities = activities
+
 
 @app.get("/")
 def root():
@@ -90,6 +93,25 @@ def root():
 @app.get("/activities")
 def get_activities():
     return activities
+
+
+@app.delete("/activities/{activity_name}/participants")
+def unregister_participant(activity_name: str, email: str):
+    """Remove a student from an activity"""
+    # Validate activity exists
+    if activity_name not in activities:
+        raise HTTPException(status_code=404, detail="Activity not found")
+
+    # Get the specific activity
+    activity = activities[activity_name]
+
+    # Validate student is currently signed up
+    if email not in activity["participants"]:
+        raise HTTPException(status_code=400, detail="Student is not signed up")
+    
+    # Remove student
+    activity["participants"].remove(email)
+    return {"message": f"Removed {email} from {activity_name}"}
 
 
 @app.post("/activities/{activity_name}/signup")
